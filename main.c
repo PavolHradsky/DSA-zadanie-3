@@ -38,8 +38,21 @@ BDD *BDD_create(char *bfunkcia) {
 
     BDD *vysl = NULL;
     vysl = (BDD*)malloc(sizeof(BDD));
-    vysl->pocet_premennych = 3;
-    vysl->pocet_uzlov = 15;
+
+    int n = 1;
+    int mocnina = 2;
+    while (mocnina <= strlen(bfunkcia)){
+        if (mocnina == strlen(bfunkcia)){
+            vysl->pocet_premennych = n;
+            break;
+        } else if(mocnina > strlen(bfunkcia)){
+            return NULL;
+        }
+        mocnina = mocnina * 2;
+        n++;
+    }
+
+    int pocet_uzlov = 0;
 
     NODE **arr = (NODE**)malloc(strlen(bfunkcia) * sizeof(NODE));
 
@@ -49,16 +62,15 @@ BDD *BDD_create(char *bfunkcia) {
     for (int i = 0; i < strlen(bfunkcia); ++i) {
         str[0] = bfunkcia[i];
         arr[i] = create_node(str);
+        pocet_uzlov++;
     }
 //    for (int i = 0; i < strlen(bfunkcia); ++i) {
 //        printf("%s\n", arr[i]->data);
 //    }
 
     int level = 2;
-
     do {
         NODE **arrNew = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));
-
 
         for (int i = 0; i < strlen(bfunkcia) / level; ++i) {
             strcpy(str, arr[2 * i]->data);
@@ -69,6 +81,7 @@ BDD *BDD_create(char *bfunkcia) {
             arr[2 * i]->parent = tmp;
             arr[2 * i+1]->parent = tmp;
             arrNew[i] = tmp;
+            pocet_uzlov++;
         }
         free(arr);
         arr = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));
@@ -88,17 +101,53 @@ BDD *BDD_create(char *bfunkcia) {
 
 
     vysl->head = tmp;
+    vysl->pocet_uzlov = pocet_uzlov;
 
     return vysl;
 }
 
+char BDD_use(BDD *bdd, char *vstupy){
+
+    NODE *tmp = bdd->head;
+
+    if (strlen(vstupy) != bdd->pocet_premennych) {
+        return 2;
+    }
+    for (int i = 0; i < strlen(vstupy); ++i) {
+        if (vstupy[i] == '0'){
+            tmp = tmp->left;
+        } else if (vstupy[i] == '1'){
+            tmp = tmp->right;
+        } else return  2;
+    }
+    return (char) tmp->data[0];
+}
 
 int main()
 {
     BDD* bdd;
-    bdd = BDD_create("10010011");
+    bdd = BDD_create("1001010011001011");
 
     printf("%s\n", bdd->head->data);
+    printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
+    printf("pocet premennych: %d\n", bdd->pocet_premennych);
+
+    printf("%c\n", BDD_use(bdd, "0000"));
+    printf("%c\n", BDD_use(bdd, "0001"));
+    printf("%c\n", BDD_use(bdd, "0010"));
+    printf("%c\n", BDD_use(bdd, "0011"));
+    printf("%c\n", BDD_use(bdd, "0100"));
+    printf("%c\n", BDD_use(bdd, "0101"));
+    printf("%c\n", BDD_use(bdd, "0110"));
+    printf("%c\n", BDD_use(bdd, "0111"));
+    printf("%c\n", BDD_use(bdd, "1000"));
+    printf("%c\n", BDD_use(bdd, "1001"));
+    printf("%c\n", BDD_use(bdd, "1010"));
+    printf("%c\n", BDD_use(bdd, "1011"));
+    printf("%c\n", BDD_use(bdd, "1100"));
+    printf("%c\n", BDD_use(bdd, "1101"));
+    printf("%c\n", BDD_use(bdd, "1110"));
+    printf("%c\n", BDD_use(bdd, "1111"));
 
 
     return 0;
