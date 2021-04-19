@@ -178,12 +178,14 @@ int BDD_reduce(BDD *bdd){
                 if(first < second && strcmp(arr[first]->data, arr[second]->data) == 0){
                     if(first == 0){
                         isRemoved = 1;
-                    } else if(arr[first-1] != NULL){
+                    } else{
                         int j = first-1;
                         while(arr[j] == NULL && j >= 0){
                             j--;
                         }
-                        if(arr[j] != NULL){
+                        if(j == 0){
+                            tmp = arr[first]->levelRight;
+                        }else if(arr[j] != NULL){
                             arr[j]->levelRight = arr[first]->levelRight;
                         }
                     }
@@ -285,20 +287,20 @@ int main()
     printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
     printf("pocet premennych: %d\n", bdd->pocet_premennych);
 
-    print_tree(bdd);
+    //print_tree(bdd);
 
     BDD_reduce(bdd);
 
     print_tree(bdd);
 
-//    printf("%c\n", BDD_use(bdd, "0000"));
-//    printf("%c\n", BDD_use(bdd, "0001"));
-//    printf("%c\n", BDD_use(bdd, "0010"));
-//    printf("%c\n", BDD_use(bdd, "0011"));
-//    printf("%c\n", BDD_use(bdd, "0100"));
-//    printf("%c\n", BDD_use(bdd, "0101"));
-//    printf("%c\n", BDD_use(bdd, "0110"));
-//    printf("%c\n", BDD_use(bdd, "0111"));
+    printf("%c\n", BDD_use(bdd, "000"));
+    printf("%c\n", BDD_use(bdd, "001"));
+    printf("%c\n", BDD_use(bdd, "010"));
+    printf("%c\n", BDD_use(bdd, "011"));
+    printf("%c\n", BDD_use(bdd, "100"));
+    printf("%c\n", BDD_use(bdd, "101"));
+    printf("%c\n", BDD_use(bdd, "110"));
+    printf("%c\n", BDD_use(bdd, "111"));
 //    printf("%c\n", BDD_use(bdd, "1000"));
 //    printf("%c\n", BDD_use(bdd, "1001"));
 //    printf("%c\n", BDD_use(bdd, "1010"));
