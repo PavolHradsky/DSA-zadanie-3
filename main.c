@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#define MAX 20
+#define MAX 100
 
 char* int2binary(int size, int vstup){
 
@@ -165,6 +165,7 @@ int BDD_reduce(BDD *bdd){
     while (tmp != NULL){
         tmp_in_line = tmp;
         NODE* tmpToRemove = NULL;
+        NODE* tmpLast = NULL;
         int i = 0;
         int isRemoved = 0;
         int count_of_removed = 0;
@@ -179,14 +180,19 @@ int BDD_reduce(BDD *bdd){
                     if(first == 0){
                         isRemoved = 1;
                     } else{
-                        int j = first-1;
-                        while(arr[j] == NULL && j >= 0){
-                            j--;
-                        }
-                        if(j == 0){
-                            tmp = arr[first]->levelRight;
-                        }else if(arr[j] != NULL){
-                            arr[j]->levelRight = arr[first]->levelRight;
+//                        NODE *tmp1 = tmp;
+//                        while (tmp1 != arr[first] && tmp1 != NULL){
+//                            tmp1 = tmp1->levelRight;
+//                        }
+                        if(tmp == arr[first]){
+                            if(arr[second] == arr[second-1]){
+
+                            }else{
+                                tmp = arr[first]->levelRight;
+                            }
+                        }else if(arr[first] != NULL){
+                            tmpLast = arr[first]->levelRight;
+//                            arr[j]->levelRight = arr[first]->levelRight;
                         }
                     }
                     if (isRemoved == 1){
@@ -198,19 +204,37 @@ int BDD_reduce(BDD *bdd){
                     for (int j = 0; j < current_size_of_arr_above; ++j) {
                         if(arr_above[j]->left == arr[first]){
                             arr_above[j]->left = arr[second];
-                        } else if(arr_above[j]->right == arr[first]){
+
+                            if(j*2 < second && arr_above[j]->left != arr_above[j]->right){
+                                arr[second-1]->levelRight = arr[second]->levelRight;
+                                if(tmpLast != NULL){
+                                    arr[second]->levelRight = tmpLast;
+                                }else{
+                                    tmp = arr[second];
+                                    if(arr[first] == arr[second-1]){
+                                        arr[second]->levelRight = NULL;
+                                    }else{
+                                        arr[second]->levelRight = arr[second-1];
+                                    }
+                                }
+                            }
+
+
+                        } if(arr_above[j]->right == arr[first]){
                             arr_above[j]->right = arr[second];
                         }
                     }
 
-                    count_of_removed++;
+                    //count_of_removed++;
                     if(first == 0){
                         tmpToRemove = arr[first];
+                        strcpy(arr[first]->data, "2");
                     } else{
                         arr[first]->levelRight = NULL;
                         free(arr[first]);
                         arr[first] = NULL;
                     }
+                    bdd->pocet_uzlov--;
                     break;
                 }
             }
@@ -221,7 +245,12 @@ int BDD_reduce(BDD *bdd){
         }
 
         free(arr_above);
-        current_size_of_arr_above = n - count_of_removed;
+        current_size_of_arr_above = 0;
+        tmp_in_line = tmp;
+        while(tmp_in_line != NULL){
+            current_size_of_arr_above++;
+            tmp_in_line = tmp_in_line->levelRight;
+        }
         arr_above = (NODE**)malloc(current_size_of_arr_above * sizeof(NODE*));
         tmp_in_line = tmp;
         i = 0;
@@ -278,47 +307,108 @@ void print_tree(BDD *bdd){
 int main()
 {
     BDD* bdd;
-    bdd = BDD_create("10110101");
+    bdd = BDD_create("10111000");
+//    bdd = BDD_create("0000000000000000000000000000000000000000000000000000000000000001");
     if (bdd == NULL) {
         return 0;
     }
-
-    printf("%s\n", bdd->head->data);
-    printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
-    printf("pocet premennych: %d\n", bdd->pocet_premennych);
-
-    //print_tree(bdd);
-
     BDD_reduce(bdd);
-
     print_tree(bdd);
 
-    printf("%c\n", BDD_use(bdd, "000"));
-    printf("%c\n", BDD_use(bdd, "001"));
-    printf("%c\n", BDD_use(bdd, "010"));
-    printf("%c\n", BDD_use(bdd, "011"));
-    printf("%c\n", BDD_use(bdd, "100"));
-    printf("%c\n", BDD_use(bdd, "101"));
-    printf("%c\n", BDD_use(bdd, "110"));
-    printf("%c\n", BDD_use(bdd, "111"));
-//    printf("%c\n", BDD_use(bdd, "1000"));
-//    printf("%c\n", BDD_use(bdd, "1001"));
-//    printf("%c\n", BDD_use(bdd, "1010"));
-//    printf("%c\n", BDD_use(bdd, "1011"));
-//    printf("%c\n", BDD_use(bdd, "1100"));
-//    printf("%c\n", BDD_use(bdd, "1101"));
-//    printf("%c\n", BDD_use(bdd, "1110"));
-//    printf("%c\n", BDD_use(bdd, "1111"));
+    printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
+    printf("pocet premennych: %d\n", bdd->pocet_premennych);
+    printf("%s\n", bdd->head->data);
 
 
-//    int pocet_vstupov = 6;
+    printf("%c", BDD_use(bdd, "000"));
+    printf("%c", BDD_use(bdd, "001"));
+    printf("%c", BDD_use(bdd, "010"));
+    printf("%c", BDD_use(bdd, "011"));
+    printf("%c", BDD_use(bdd, "100"));
+    printf("%c", BDD_use(bdd, "101"));
+    printf("%c", BDD_use(bdd, "110"));
+    printf("%c", BDD_use(bdd, "111"));
+
+
+
+//    printf("%c", BDD_use(bdd, "000000"));
+//    printf("%c", BDD_use(bdd, "000001"));
+//    printf("%c", BDD_use(bdd, "000010"));
+//    printf("%c", BDD_use(bdd, "000011"));
+//    printf("%c", BDD_use(bdd, "000100"));
+//    printf("%c", BDD_use(bdd, "000101"));
+//    printf("%c", BDD_use(bdd, "000110"));
+//    printf("%c", BDD_use(bdd, "000111"));
+//    printf("%c", BDD_use(bdd, "001000"));
+//    printf("%c", BDD_use(bdd, "001001"));
+//    printf("%c", BDD_use(bdd, "001010"));
+//    printf("%c", BDD_use(bdd, "001011"));
+//    printf("%c", BDD_use(bdd, "001100"));
+//    printf("%c", BDD_use(bdd, "001101"));
+//    printf("%c", BDD_use(bdd, "001110"));
+//    printf("%c", BDD_use(bdd, "001111"));
+//    printf("%c", BDD_use(bdd, "010000"));
+//    printf("%c", BDD_use(bdd, "010001"));
+//    printf("%c", BDD_use(bdd, "010010"));
+//    printf("%c", BDD_use(bdd, "010011"));
+//    printf("%c", BDD_use(bdd, "010100"));
+//    printf("%c", BDD_use(bdd, "010101"));
+//    printf("%c", BDD_use(bdd, "010110"));
+//    printf("%c", BDD_use(bdd, "010111"));
+//    printf("%c", BDD_use(bdd, "011000"));
+//    printf("%c", BDD_use(bdd, "011001"));
+//    printf("%c", BDD_use(bdd, "011010"));
+//    printf("%c", BDD_use(bdd, "011011"));
+//    printf("%c", BDD_use(bdd, "011100"));
+//    printf("%c", BDD_use(bdd, "011101"));
+//    printf("%c", BDD_use(bdd, "011110"));
+//    printf("%c", BDD_use(bdd, "011111"));
+//
+//    printf("%c", BDD_use(bdd, "100000"));
+//    printf("%c", BDD_use(bdd, "100001"));
+//    printf("%c", BDD_use(bdd, "100010"));
+//    printf("%c", BDD_use(bdd, "100011"));
+//    printf("%c", BDD_use(bdd, "100100"));
+//    printf("%c", BDD_use(bdd, "100101"));
+//    printf("%c", BDD_use(bdd, "100110"));
+//    printf("%c", BDD_use(bdd, "100111"));
+//    printf("%c", BDD_use(bdd, "101000"));
+//    printf("%c", BDD_use(bdd, "101001"));
+//    printf("%c", BDD_use(bdd, "101010"));
+//    printf("%c", BDD_use(bdd, "101011"));
+//    printf("%c", BDD_use(bdd, "101100"));
+//    printf("%c", BDD_use(bdd, "101101"));
+//    printf("%c", BDD_use(bdd, "101110"));
+//    printf("%c", BDD_use(bdd, "101111"));
+//    printf("%c", BDD_use(bdd, "110000"));
+//    printf("%c", BDD_use(bdd, "110001"));
+//    printf("%c", BDD_use(bdd, "110010"));
+//    printf("%c", BDD_use(bdd, "110011"));
+//    printf("%c", BDD_use(bdd, "110100"));
+//    printf("%c", BDD_use(bdd, "110101"));
+//    printf("%c", BDD_use(bdd, "110110"));
+//    printf("%c", BDD_use(bdd, "110111"));
+//    printf("%c", BDD_use(bdd, "111000"));
+//    printf("%c", BDD_use(bdd, "111001"));
+//    printf("%c", BDD_use(bdd, "111010"));
+//    printf("%c", BDD_use(bdd, "111011"));
+//    printf("%c", BDD_use(bdd, "111100"));
+//    printf("%c", BDD_use(bdd, "111101"));
+//    printf("%c", BDD_use(bdd, "111110"));
+//    printf("%c", BDD_use(bdd, "111111"));
+
+
+//    int pocet_vstupov = 4;
 //
 //    char *str = "";
-//    str = int2binary(size_from_count(pocet_vstupov), 123);
+//    str = int2binary(size_from_count(pocet_vstupov), 4);
 //    bdd = BDD_create(str);
 //    if (bdd == NULL) {
 //        return 0;
 //    }
+//    BDD_reduce(bdd);
+//
+//    print_tree(bdd);
 //
 //    printf("%s\n", bdd->head->data);
 //    printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
