@@ -12,8 +12,8 @@
 #include <time.h>
 #define MAX 10000
 
-char* int2binary(long long size, long long vstup){
-
+char* int2binary(long long size, long long vstup){  //pomocna funkcia, prekonvertuje cislo v 10 sustave na cislo
+                                                    // v 2 sustave na size bitov a vrati retazec ako str
     long long vysl = 0;
     long long t = 0;
     char* str = malloc((size + 1) * sizeof(char));
@@ -32,7 +32,8 @@ char* int2binary(long long size, long long vstup){
     return str;
 }
 
-long long size_from_count(long long size){
+long long size_from_count(long long size){  //pomocna funkcia, zisti pocet bitov binarnej funkcie pre size premennych
+                                            //(2^n)
     long long n = size;
     size = 1;
 
@@ -43,21 +44,21 @@ long long size_from_count(long long size){
     return size;
 }
 
-typedef struct node {
-    struct node *left;
-    struct node *right;
-    struct node *levelRight;
-    char data[MAX];
+typedef struct node {   //struktura uzlu v strome
+    struct node *left;  //lave dieta
+    struct node *right; //prave dieta
+    struct node *levelRight;    //pravy sused
+    char data[MAX]; //data typu string
 }NODE;
 
-typedef struct bdd {
+typedef struct bdd {    //struktura hlavicky BDD
     long long pocet_premennych;
     long long pocet_uzlov;
     long long height;
-    NODE *head;
+    NODE *head; //ukazovatel na root stromu
 }BDD;
 
-NODE *create_node(char data[MAX]){
+NODE *create_node(char data[MAX]){  //funkcia dostane data (str) a vytvori uzol stromu
     NODE *result = NULL;
     result = (NODE*)malloc(sizeof(NODE));
     strcpy(result->data, data);
@@ -71,11 +72,11 @@ NODE *create_node(char data[MAX]){
 BDD *BDD_create(char *bfunkcia) {
 
     BDD *vysl = NULL;
-    vysl = (BDD*)malloc(sizeof(BDD));
+    vysl = (BDD*)malloc(sizeof(BDD));   //alokuje sa hlavicka bdd
 
-    long long n = 1;
-    long long mocnina = 2;
-    while (mocnina <= strlen(bfunkcia)){
+    long long n = 1;    //pocet premennych
+    long long mocnina = 2;  //konstanta na mocninu
+    while (mocnina <= strlen(bfunkcia)){    //test, ci je spravny vstup
         if (mocnina == strlen(bfunkcia)){
             vysl->pocet_premennych = n;
             break;
@@ -83,7 +84,7 @@ BDD *BDD_create(char *bfunkcia) {
         mocnina = mocnina * 2;
         n++;
     }
-    if(mocnina > strlen(bfunkcia)){
+    if(mocnina > strlen(bfunkcia)){ //ak vstup nie je spravny, vrati NULL
         printf("Vstup nie je vektor BF\n");
         return NULL;
     }
@@ -91,16 +92,16 @@ BDD *BDD_create(char *bfunkcia) {
     long long height = 0;
     long long pocet_uzlov = 0;
 
-    NODE **arr = (NODE**)malloc(strlen(bfunkcia) * sizeof(NODE));
+    NODE **arr = (NODE**)malloc(strlen(bfunkcia) * sizeof(NODE));   //alokuje sa pole uzlov pre najspodnejsiu uroven
 
     char str[MAX] = "";
-    NODE *tmp = NULL;
+    NODE *tmp = NULL;   //vytvori sa tmp uzol
 
-    for (long long i = 0; i < strlen(bfunkcia); ++i) {
+    for (long long i = 0; i < strlen(bfunkcia); ++i) {  //do pola arr sa vytvoria uzly s jednotlivymi znakmi bfunkcie
         str[0] = bfunkcia[i];
         arr[i] = create_node(str);
         if(i != 0){
-            arr[i-1]->levelRight = arr[i];
+            arr[i-1]->levelRight = arr[i];  //nastavia sa ukazovatele na praveho suseda uzlov
         }
         pocet_uzlov++;
     }
@@ -109,192 +110,75 @@ BDD *BDD_create(char *bfunkcia) {
 //        printf("%s\n", arr[i]->data);
 //    }
 
-    long long level = 2;
-    do {
-        NODE **arrNew = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));
+    long long level = 2;    //pocita sa level
+    do {    //postupne idem od spodu stromu ku korenu
+        NODE **arrNew = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));    //alokuje sa pole arrNew (uroven nad arr)
 
-        for (long long i = 0; i < strlen(bfunkcia) / level; ++i) {
+        for (long long i = 0; i < strlen(bfunkcia) / level; ++i) {  //pre tuto uroven sa vytvoria uzly tak,
+                                                                // ze sa spoja vzdy 2 susediace uzly z urovne pod nou
             strcpy(str, arr[2 * i]->data);
             strcat(str, arr[2 * i + 1]->data);
             tmp = create_node(str);
-            tmp->left = arr[2 * i];
+            tmp->left = arr[2 * i]; //nastavia sa ukazovatele left a right na 2 susedne uzlu pod tmp
             tmp->right = arr[2 * i+1];
 //            arr[2 * i]->parent = tmp;
 //            arr[2 * i+1]->parent = tmp;
-            arrNew[i] = tmp;
+            arrNew[i] = tmp;    //tmp sa skopiruje do pola arrNew na dany index
             if(i != 0){
-                arrNew[i-1]->levelRight = arrNew[i];
+                arrNew[i-1]->levelRight = arrNew[i];    //nastavi sa ukazovatel na praveho suseda na tejto urovni
             }
-            pocet_uzlov++;
+            pocet_uzlov++;  //pocita pocet uzlov
         }
-        height++;
-        free(arr);
-        arr = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));
-        for (long long i = 0; i < strlen(bfunkcia) / level; ++i) {
+        height++;   //pocita vysku
+        free(arr);  //pole arr sa uvolni
+        arr = (NODE**)malloc(strlen(bfunkcia) / level * sizeof(NODE));  //pole arr sa alokuje vo velkosti ako arrNew
+        for (long long i = 0; i < strlen(bfunkcia) / level; ++i) {  //arrNew sa skopiruje do arr
             arr[i] = arrNew[i];
         }
-        free(arrNew);
+        free(arrNew);   //uvolni sa arr
 
 //        printf("ARR:\n");
 //        for (int i = 0; i < strlen(bfunkcia) / level; ++i) {
 //            printf("%s\n", arr[i]->data);
 //        }
-        level *= 2;
+        level *= 2; //premenna level sa umocni 2
 
-    }while(strcmp(str, bfunkcia) != 0);
-    free(arr);
+    }while(strcmp(str, bfunkcia) != 0);     //tento cyklus sa opakuje, az kym sa premenna str nerovna bfunkcii (koren)
+    free(arr);  //uvolni sa arr
 
-    vysl->height = height;
+    vysl->height = height;  //ulozi sa vyska, pocet uzlov a hlavicka
     vysl->head = tmp;
     vysl->pocet_uzlov = pocet_uzlov;
 
-    return vysl;
+    return vysl;    //vrati sa bdd
 }
 
-//int BDD_reduce(BDD *bdd){
-//
-//    NODE *tmp = bdd->head;
-//    NODE *tmp_in_line;
-//    int level = 0;
-//    int height = bdd->height;
-//    int n = 1;
-//    int current_size_of_arr_above = n;
-//
-//    NODE** arr = (NODE**)malloc(n * sizeof(NODE*));
-//    NODE** arr_above = (NODE**)malloc(n * sizeof(NODE*));
-//
-//
-//    while (tmp != NULL){
-//        tmp_in_line = tmp;
-//        NODE* tmpToRemove = NULL;
-//        NODE* tmpLast = NULL;
-//        int i = 0;
-//        int isRemoved = 0;
-//        int count_of_removed = 0;
-//        while (tmp_in_line != NULL){
-//            arr[i] = tmp_in_line;
-//            tmp_in_line = tmp_in_line->levelRight;
-//            i++;
-//        }
-//        for(int first = 0; first < i; first++){
-//            for (int second = 0; second < i; ++second) {
-//                if(first < second && strcmp(arr[first]->data, arr[second]->data) == 0){
-//                    if(first == 0){
-//                        isRemoved = 1;
-//                    } else{
-////                        NODE *tmp1 = tmp;
-////                        while (tmp1 != arr[first] && tmp1 != NULL){
-////                            tmp1 = tmp1->levelRight;
-////                        }
-//                        if(tmp == arr[first]){
-//                            if(arr[second] == arr[second-1]){
-//
-//                            }else{
-//                                tmp = arr[first]->levelRight;
-//                            }
-//                        }else if(arr[first] != NULL){
-//                            tmpLast = arr[first]->levelRight;
-////                            arr[j]->levelRight = arr[first]->levelRight;
-//                        }
-//                    }
-//                    if (isRemoved == 1){
-//                        tmp = arr[first]->levelRight;
-//                        isRemoved = 0;
-//                    }
-//
-//
-//                    for (int j = 0; j < current_size_of_arr_above; ++j) {
-//                        if(arr_above[j]->left == arr[first]){
-//                            arr_above[j]->left = arr[second];
-//
-//                            if(j*2 < second && arr_above[j]->left != arr_above[j]->right){
-//                                arr[second-1]->levelRight = arr[second]->levelRight;
-//                                if(tmpLast != NULL){
-//                                    arr[second]->levelRight = tmpLast;
-//                                }else{
-//                                    tmp = arr[second];
-//                                    if(arr[first] == arr[second-1]){
-//                                        arr[second]->levelRight = NULL;
-//                                    }else{
-//                                        arr[second]->levelRight = arr[second-1];
-//                                    }
-//                                }
-//                            }
-//
-//
-//                        } if(arr_above[j]->right == arr[first]){
-//                            arr_above[j]->right = arr[second];
-//                        }
-//                    }
-//
-//                    //count_of_removed++;
-//                    if(first == 0){
-//                        tmpToRemove = arr[first];
-//                        strcpy(arr[first]->data, "2");
-//                    } else{
-//                        arr[first]->levelRight = NULL;
-//                        free(arr[first]);
-//                        arr[first] = NULL;
-//                    }
-//                    bdd->pocet_uzlov--;
-//                    break;
-//                }
-//            }
-//        }
-//
-//        if(tmpToRemove != NULL){
-//            free(tmpToRemove);
-//        }
-//
-//        free(arr_above);
-//        current_size_of_arr_above = 0;
-//        tmp_in_line = tmp;
-//        while(tmp_in_line != NULL){
-//            current_size_of_arr_above++;
-//            tmp_in_line = tmp_in_line->levelRight;
-//        }
-//        arr_above = (NODE**)malloc(current_size_of_arr_above * sizeof(NODE*));
-//        tmp_in_line = tmp;
-//        i = 0;
-//        while (tmp_in_line != NULL){
-//            arr_above[i] = tmp_in_line;
-//            tmp_in_line = tmp_in_line->levelRight;
-//            i++;
-//        }
-//        n *= 2;
-//        free(arr);
-//        arr = (NODE**)malloc(n * sizeof(NODE*));
-//        tmp = tmp->left;
-//    }
-//
-//    return 0;
-//}
+int BDD_reduce(BDD *bdd){   //funkcia redukuje bdd
 
-int BDD_reduce(BDD *bdd){
-
-    NODE *tmp = bdd->head;
-    NODE *tmp_in_line;
+    NODE *tmp = bdd->head;  //tmp sa nastavi na hlavicku bdd
+    NODE *tmp_in_line;  //tmp_in_line bude prehladavat vzdy jednu uroven stromu po ukazovateloch levelRight
     long long n = 1;
     long long current_size_of_arr_above = n;
 
-    NODE** arr = (NODE**)malloc(n * sizeof(NODE*));
+    NODE** arr = (NODE**)malloc(n * sizeof(NODE*)); //alokuje sa arr a arr_above
     NODE** arr_above = (NODE**)malloc(n * sizeof(NODE*));
 
 
-    while (tmp != NULL){
-        tmp_in_line = tmp;
+    while (tmp != NULL){    //strom sa prechadza po lavych uzloch od korena smerom nadol
+        tmp_in_line = tmp;  //tmp je teda vzdy lavy uzol na danej urovni v strome
         long long i = 0;
-        while (tmp_in_line != NULL){
+        while (tmp_in_line != NULL){    //nastavi sa pole arr ako jedna uroven (uzly vedla seba) stromu
             arr[i] = tmp_in_line;
             tmp_in_line = tmp_in_line->levelRight;
             i++;
         }
-        for(long long first = i-1; first >= 0; first--){
+        for(long long first = i-1; first >= 0; first--){    //od konca porovnavam kazdy s kazdym uzolm na danej urovni
             for (long long second = i-1; second >= 0; second--) {
-                if(first > second && strcmp(arr[first]->data, arr[second]->data) == 0){
+                if(first > second && strcmp(arr[first]->data, arr[second]->data) == 0){ //ak je first > second a zaroven
+                    //sa data na danych uzloch rovnaju, odstranim ten viac v pravo (first)
 
-
-                    for (long long j = 0; j < current_size_of_arr_above; ++j) {
+                    for (long long j = 0; j < current_size_of_arr_above; ++j) { //v urovni nad nou, pozeram ci nejaky
+                        // uzol ukazuje left alebo right na vymazany uzol, ak ano, prepisem ho na druhy uzol ktory ostal
                         if(arr_above[j]->left == arr[first]){
                             arr_above[j]->left = arr[second];
                         } if(arr_above[j]->right == arr[first]){
@@ -302,34 +186,34 @@ int BDD_reduce(BDD *bdd){
                         }
                     }
 
-                    arr[first-1]->levelRight = arr[first]->levelRight;
+                    arr[first-1]->levelRight = arr[first]->levelRight;  //v spajanom zozname obidem vymazany uzol
 
-                    free(arr[first]);
-                    bdd->pocet_uzlov--;
-                    break;
+                    free(arr[first]);   //tento uzol uvolnim
+                    bdd->pocet_uzlov--; //decrementujem pocet uzlov v strome
+                    break;  //kedze uzol first som vymazal, nema zmysel ho dalej porovnavat, tak sa posuniem dalej
                 }
             }
         }
 
-        free(arr_above);
+        free(arr_above);    //uvolnim pole arr_above
         current_size_of_arr_above = 0;
         tmp_in_line = tmp;
-        while(tmp_in_line != NULL){
+        while(tmp_in_line != NULL){ //postupne prejdem danu uroven a zistim, kolko je tam uzlov
             current_size_of_arr_above++;
             tmp_in_line = tmp_in_line->levelRight;
         }
-        arr_above = (NODE**)malloc(current_size_of_arr_above * sizeof(NODE*));
+        arr_above = (NODE**)malloc(current_size_of_arr_above * sizeof(NODE*));  //podla toho alokujem nove pole arr_above
         tmp_in_line = tmp;
         i = 0;
-        while (tmp_in_line != NULL){
+        while (tmp_in_line != NULL){    //v tomto alokovanom poli nastavim hodnoty na uzly na danej urovni
             arr_above[i] = tmp_in_line;
             tmp_in_line = tmp_in_line->levelRight;
             i++;
         }
-        n *= 2;
-        free(arr);
-        arr = (NODE**)malloc(n * sizeof(NODE*));
-        tmp = tmp->left;
+        n *= 2; //n vynasobim 2, cim dostanem pocet uzlov na dalsej urovni
+        free(arr);  //uvolnim arr
+        arr = (NODE**)malloc(n * sizeof(NODE*));    //alokujem arr na pocet n
+        tmp = tmp->left;    //posuniem sa o uroven nizsie
     }
 
     return 0;
@@ -338,23 +222,24 @@ int BDD_reduce(BDD *bdd){
 
 char BDD_use(BDD *bdd, char *vstupy){
 
-    NODE *tmp = bdd->head;
+    NODE *tmp = bdd->head;  //vytvorenie premennej tmo, s ktorou sa budem hybat po strome
 
 
-    if (strlen(vstupy) != bdd->pocet_premennych) {
+    if (strlen(vstupy) != bdd->pocet_premennych) {  //zistim ci som dostal dobry vstup
         return 2;
     }
-    for (int i = 0; i < strlen(vstupy); ++i) {
+    for (int i = 0; i < strlen(vstupy); ++i) {  //prehladavam strom, ak mam na danom indexe vo vektore 0,
+                                                // posuniem sa dolava, ak 1 tak doprava
         if (vstupy[i] == '0'){
             tmp = tmp->left;
         } else if (vstupy[i] == '1'){
             tmp = tmp->right;
         } else return  2;
     }
-    return (char) tmp->data[0];
+    return (char) tmp->data[0]; //vratim hodnotu posledneho uzlu (0 alebo 1)
 }
 
-void print_tree(BDD *bdd){
+void print_tree(BDD *bdd){  //pomocna funkcia, ktora mi vypise strom
     NODE *tmp = bdd->head;
     NODE *tmp_in_line = tmp;
 
@@ -372,7 +257,7 @@ void print_tree(BDD *bdd){
     }
 }
 
-int test_to_6(BDD *bdd){
+int test_to_6(BDD *bdd){    //test, kde manualne vlozim vektor 6 premennych a potom ho prehladavam
     //    bdd = BDD_create("1011001011010001010010111011001011010010101100101110110100010100");
     bdd = BDD_create("0000000000000000000000000000000000000000000000000000000000000001");
     if (bdd == NULL) {
@@ -454,7 +339,8 @@ int test_to_6(BDD *bdd){
     return 0;
 }
 
-int test_for_x(BDD *bdd, int x, int cislo){
+int test_for_x(BDD *bdd, int x, int cislo){ //test, kde zadam pocet vstupov a cislo,
+                                            // funkcia mi vytvori a zredukuje strom a potom ho prehladava
     int pocet_vstupov = x;
 
     char *str = "";
@@ -487,7 +373,7 @@ int main()
 
     long long n;
     time_t t;
-    srand((unsigned) time(&t));
+    srand((unsigned) time(&t)); //random hodnoty
 
 //    for (int i = 0; i < 16; ++i) {
 //        test_for_x(bdd, 2, i);
@@ -502,7 +388,7 @@ int main()
 
     start = clock();    //zapne casovac
 
-    for(int j = 2; j < 14; j++){
+    for(int j = 2; j < 14; j++){    //postupne vytvori strom s 2 - 13 premennymi a skusa pouzit 10 nahodnych vektorov
         for (int i = 0; i < 10; ++i) {
             n = pow(2, size_from_count(j));
             test_for_x(bdd, j, rand() % n);
@@ -513,12 +399,6 @@ int main()
     end = clock();      //skonci casovac
     cpu_time_used = ((double) (end - start));
     printf("Time: %lfms\n", cpu_time_used);
-
-
-
-//    char *str;
-//    str = int2binary(64, 1);
-//    printf("%s\n", str);
 
 
     return 0;
