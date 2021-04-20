@@ -149,12 +149,129 @@ BDD *BDD_create(char *bfunkcia) {
     return vysl;
 }
 
+//int BDD_reduce(BDD *bdd){
+//
+//    NODE *tmp = bdd->head;
+//    NODE *tmp_in_line;
+//    int level = 0;
+//    int height = bdd->height;
+//    int n = 1;
+//    int current_size_of_arr_above = n;
+//
+//    NODE** arr = (NODE**)malloc(n * sizeof(NODE*));
+//    NODE** arr_above = (NODE**)malloc(n * sizeof(NODE*));
+//
+//
+//    while (tmp != NULL){
+//        tmp_in_line = tmp;
+//        NODE* tmpToRemove = NULL;
+//        NODE* tmpLast = NULL;
+//        int i = 0;
+//        int isRemoved = 0;
+//        int count_of_removed = 0;
+//        while (tmp_in_line != NULL){
+//            arr[i] = tmp_in_line;
+//            tmp_in_line = tmp_in_line->levelRight;
+//            i++;
+//        }
+//        for(int first = 0; first < i; first++){
+//            for (int second = 0; second < i; ++second) {
+//                if(first < second && strcmp(arr[first]->data, arr[second]->data) == 0){
+//                    if(first == 0){
+//                        isRemoved = 1;
+//                    } else{
+////                        NODE *tmp1 = tmp;
+////                        while (tmp1 != arr[first] && tmp1 != NULL){
+////                            tmp1 = tmp1->levelRight;
+////                        }
+//                        if(tmp == arr[first]){
+//                            if(arr[second] == arr[second-1]){
+//
+//                            }else{
+//                                tmp = arr[first]->levelRight;
+//                            }
+//                        }else if(arr[first] != NULL){
+//                            tmpLast = arr[first]->levelRight;
+////                            arr[j]->levelRight = arr[first]->levelRight;
+//                        }
+//                    }
+//                    if (isRemoved == 1){
+//                        tmp = arr[first]->levelRight;
+//                        isRemoved = 0;
+//                    }
+//
+//
+//                    for (int j = 0; j < current_size_of_arr_above; ++j) {
+//                        if(arr_above[j]->left == arr[first]){
+//                            arr_above[j]->left = arr[second];
+//
+//                            if(j*2 < second && arr_above[j]->left != arr_above[j]->right){
+//                                arr[second-1]->levelRight = arr[second]->levelRight;
+//                                if(tmpLast != NULL){
+//                                    arr[second]->levelRight = tmpLast;
+//                                }else{
+//                                    tmp = arr[second];
+//                                    if(arr[first] == arr[second-1]){
+//                                        arr[second]->levelRight = NULL;
+//                                    }else{
+//                                        arr[second]->levelRight = arr[second-1];
+//                                    }
+//                                }
+//                            }
+//
+//
+//                        } if(arr_above[j]->right == arr[first]){
+//                            arr_above[j]->right = arr[second];
+//                        }
+//                    }
+//
+//                    //count_of_removed++;
+//                    if(first == 0){
+//                        tmpToRemove = arr[first];
+//                        strcpy(arr[first]->data, "2");
+//                    } else{
+//                        arr[first]->levelRight = NULL;
+//                        free(arr[first]);
+//                        arr[first] = NULL;
+//                    }
+//                    bdd->pocet_uzlov--;
+//                    break;
+//                }
+//            }
+//        }
+//
+//        if(tmpToRemove != NULL){
+//            free(tmpToRemove);
+//        }
+//
+//        free(arr_above);
+//        current_size_of_arr_above = 0;
+//        tmp_in_line = tmp;
+//        while(tmp_in_line != NULL){
+//            current_size_of_arr_above++;
+//            tmp_in_line = tmp_in_line->levelRight;
+//        }
+//        arr_above = (NODE**)malloc(current_size_of_arr_above * sizeof(NODE*));
+//        tmp_in_line = tmp;
+//        i = 0;
+//        while (tmp_in_line != NULL){
+//            arr_above[i] = tmp_in_line;
+//            tmp_in_line = tmp_in_line->levelRight;
+//            i++;
+//        }
+//        n *= 2;
+//        free(arr);
+//        arr = (NODE**)malloc(n * sizeof(NODE*));
+//        tmp = tmp->left;
+//    }
+//
+//    return 0;
+//}
+
 int BDD_reduce(BDD *bdd){
 
     NODE *tmp = bdd->head;
     NODE *tmp_in_line;
-    int level = 0;
-    int height = bdd->height;
     int n = 1;
     int current_size_of_arr_above = n;
 
@@ -164,84 +281,32 @@ int BDD_reduce(BDD *bdd){
 
     while (tmp != NULL){
         tmp_in_line = tmp;
-        NODE* tmpToRemove = NULL;
-        NODE* tmpLast = NULL;
         int i = 0;
-        int isRemoved = 0;
-        int count_of_removed = 0;
         while (tmp_in_line != NULL){
             arr[i] = tmp_in_line;
             tmp_in_line = tmp_in_line->levelRight;
             i++;
         }
-        for(int first = 0; first < i; first++){
-            for (int second = 0; second < i; ++second) {
-                if(first < second && strcmp(arr[first]->data, arr[second]->data) == 0){
-                    if(first == 0){
-                        isRemoved = 1;
-                    } else{
-//                        NODE *tmp1 = tmp;
-//                        while (tmp1 != arr[first] && tmp1 != NULL){
-//                            tmp1 = tmp1->levelRight;
-//                        }
-                        if(tmp == arr[first]){
-                            if(arr[second] == arr[second-1]){
-
-                            }else{
-                                tmp = arr[first]->levelRight;
-                            }
-                        }else if(arr[first] != NULL){
-                            tmpLast = arr[first]->levelRight;
-//                            arr[j]->levelRight = arr[first]->levelRight;
-                        }
-                    }
-                    if (isRemoved == 1){
-                        tmp = arr[first]->levelRight;
-                        isRemoved = 0;
-                    }
+        for(int first = i-1; first >= 0; first--){
+            for (int second = i-1; second >= 0; second--) {
+                if(first > second && strcmp(arr[first]->data, arr[second]->data) == 0){
 
 
                     for (int j = 0; j < current_size_of_arr_above; ++j) {
                         if(arr_above[j]->left == arr[first]){
                             arr_above[j]->left = arr[second];
-
-                            if(j*2 < second && arr_above[j]->left != arr_above[j]->right){
-                                arr[second-1]->levelRight = arr[second]->levelRight;
-                                if(tmpLast != NULL){
-                                    arr[second]->levelRight = tmpLast;
-                                }else{
-                                    tmp = arr[second];
-                                    if(arr[first] == arr[second-1]){
-                                        arr[second]->levelRight = NULL;
-                                    }else{
-                                        arr[second]->levelRight = arr[second-1];
-                                    }
-                                }
-                            }
-
-
                         } if(arr_above[j]->right == arr[first]){
                             arr_above[j]->right = arr[second];
                         }
                     }
 
-                    //count_of_removed++;
-                    if(first == 0){
-                        tmpToRemove = arr[first];
-                        strcpy(arr[first]->data, "2");
-                    } else{
-                        arr[first]->levelRight = NULL;
-                        free(arr[first]);
-                        arr[first] = NULL;
-                    }
+                    arr[first-1]->levelRight = arr[first]->levelRight;
+
+                    free(arr[first]);
                     bdd->pocet_uzlov--;
                     break;
                 }
             }
-        }
-
-        if(tmpToRemove != NULL){
-            free(tmpToRemove);
         }
 
         free(arr_above);
@@ -267,6 +332,7 @@ int BDD_reduce(BDD *bdd){
 
     return 0;
 }
+
 
 char BDD_use(BDD *bdd, char *vstupy){
 
@@ -307,7 +373,7 @@ void print_tree(BDD *bdd){
 int main()
 {
     BDD* bdd;
-    bdd = BDD_create("10111000");
+    bdd = BDD_create("00000000");
 //    bdd = BDD_create("0000000000000000000000000000000000000000000000000000000000000001");
     if (bdd == NULL) {
         return 0;
