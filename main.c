@@ -153,12 +153,13 @@ BDD *BDD_create(char *bfunkcia) {
     return vysl;    //vrati sa bdd
 }
 
-int BDD_reduce(BDD *bdd){   //funkcia redukuje bdd
+long long BDD_reduce(BDD *bdd){   //funkcia redukuje bdd
 
     NODE *tmp = bdd->head;  //tmp sa nastavi na hlavicku bdd
     NODE *tmp_in_line;  //tmp_in_line bude prehladavat vzdy jednu uroven stromu po ukazovateloch levelRight
     long long n = 1;
     long long current_size_of_arr_above = n;
+    long long pocet_odstranenych_uzlov = 0;
 
     NODE** arr = (NODE**)malloc(n * sizeof(NODE*)); //alokuje sa arr a arr_above
     NODE** arr_above = (NODE**)malloc(n * sizeof(NODE*));
@@ -190,6 +191,7 @@ int BDD_reduce(BDD *bdd){   //funkcia redukuje bdd
 
                     free(arr[first]);   //tento uzol uvolnim
                     bdd->pocet_uzlov--; //decrementujem pocet uzlov v strome
+                    pocet_odstranenych_uzlov++;
                     break;  //kedze uzol first som vymazal, nema zmysel ho dalej porovnavat, tak sa posuniem dalej
                 }
             }
@@ -216,7 +218,7 @@ int BDD_reduce(BDD *bdd){   //funkcia redukuje bdd
         tmp = tmp->left;    //posuniem sa o uroven nizsie
     }
 
-    return 0;
+    return pocet_odstranenych_uzlov;
 }
 
 
@@ -258,11 +260,12 @@ void print_tree(BDD *bdd){  //pomocna funkcia, ktora mi vypise strom
 }
 
 int test_to_6(BDD *bdd){    //test, kde manualne vlozim vektor 6 premennych a potom ho prehladavam
-    //    bdd = BDD_create("1011001011010001010010111011001011010010101100101110110100010100");
-    bdd = BDD_create("0000000000000000000000000000000000000000000000000000000000000001");
+        bdd = BDD_create("1011001011010001010010111011001011010010101100101110110100010100");
+//    bdd = BDD_create("0000000000000000000000000000000000000000000000000000000000000001");
     if (bdd == NULL) {
         return 0;
     }
+    print_tree(bdd);
     BDD_reduce(bdd);
     print_tree(bdd);
 
@@ -339,66 +342,134 @@ int test_to_6(BDD *bdd){    //test, kde manualne vlozim vektor 6 premennych a po
     return 0;
 }
 
-int test_for_x(BDD *bdd, int x, int cislo){ //test, kde zadam pocet vstupov a cislo,
+int test_for_x(BDD *bdd, int x, long long cislo){ //test, kde zadam pocet vstupov a cislo,
                                             // funkcia mi vytvori a zredukuje strom a potom ho prehladava
     int pocet_vstupov = x;
 
     char *str = "";
     str = int2binary(size_from_count(pocet_vstupov), cislo);
+
+    clock_t start, end;
+    double cpu_time_used;
+    start = clock();
+
     bdd = BDD_create(str);
+
+    end = clock();      //skonci casovac
+    cpu_time_used = ((double) (end - start));
+    printf("BDD_CREATE\npocet premennych: %lld\npocet uzlov: %lld\n", bdd->pocet_premennych, bdd->pocet_uzlov);
+    printf("Time: %.2lfms\n", cpu_time_used);
+    long long pocet_uzlov = bdd->pocet_uzlov;
     if (bdd == NULL) {
         return 0;
     }
+
+    start = clock();
+
     BDD_reduce(bdd);
 
-    //print_tree(bdd);
+    end = clock();      //skonci casovac
+    cpu_time_used = ((double) (end - start));
+    printf("BDD_REDUCE\npocet uzlov: %lld\n", bdd->pocet_uzlov);
+    double pomer = 100-((double)100/(double)pocet_uzlov)*(bdd->pocet_uzlov);
+    printf("strom bol zredukovany o %lf%%\n", pomer);
+    printf("Time: %.2lfms\n", cpu_time_used);
 
-    //printf("pocet uzlov: %d\n", bdd->pocet_uzlov);
-    //printf("pocet premennych: %d\n", bdd->pocet_premennych);
-    //printf("%s\n", bdd->head->data);
 
-    for (int i = 0; i < strlen(str); ++i) {
+    start = clock();
+
+    for (long long i = 0; i < strlen(str); ++i) {
         BDD_use(bdd, int2binary(pocet_vstupov, i));
-        //printf("%c", );
+//        printf("%c", BDD_use(bdd, int2binary(pocet_vstupov, i)));
     }
-    //printf("\n\n");
+    end = clock();      //skonci casovac
+    cpu_time_used = ((double) (end - start));
+    printf("BDD_USE (vsetky moznosti)\n");
+    printf("Time: %.2lfms\n\n", cpu_time_used);
+    return 0;
+}
+
+int test_for_x_without_printf(BDD *bdd, int x, long long cislo){ //test, kde zadam pocet vstupov a cislo,
+    // funkcia mi vytvori a zredukuje strom a potom ho prehladava
+    int pocet_vstupov = x;
+
+    char *str = "";
+    str = int2binary(size_from_count(pocet_vstupov), cislo);
+
+    bdd = BDD_create(str);
+
+    if (bdd == NULL) {
+        return 0;
+    }
+
+    BDD_reduce(bdd);
+
+    for (long long i = 0; i < strlen(str); ++i) {
+        BDD_use(bdd, int2binary(pocet_vstupov, i));
+    }
     return 0;
 }
 
 int main()
 {
     BDD *bdd = NULL;
+//    bdd = BDD_create("10111000");
+//    BDD_reduce(bdd);
+//    print_tree(bdd);
+//
+//    printf("%c", BDD_use(bdd, "000"));
+//    printf("%c", BDD_use(bdd, "001"));
+//    printf("%c", BDD_use(bdd, "010"));
+//    printf("%c", BDD_use(bdd, "011"));
+//    printf("%c", BDD_use(bdd, "100"));
+//    printf("%c", BDD_use(bdd, "101"));
+//    printf("%c", BDD_use(bdd, "110"));
+//    printf("%c", BDD_use(bdd, "111"));
+
+
 //    test_to_6(bdd);
-//    test_for_x(bdd, 13, 436578);
+//    test_for_x(bdd, 4, 134);
+
+    //test_for_x(bdd, 14, 85643675869867);
+
+//    long long n;
+//    time_t t;
+//    srand((unsigned) time(&t)); //random hodnoty
+
+//    clock_t start, end;
+//    double cpu_time_used;
+
+//    for(int j = 2; j < 14; j++){    //postupne vytvori strom s 2 - 13 premennymi a skusa pouzit 10 nahodnych vektorov
+//        for (int i = 0; i < 10; ++i) {
+//            n = pow(2, size_from_count(j));
+//            test_for_x(bdd, j, rand() % n);
+//        }
+//    }
+
+//  ------test on 13------
 
     long long n;
     time_t t;
     srand((unsigned) time(&t)); //random hodnoty
 
-//    for (int i = 0; i < 16; ++i) {
-//        test_for_x(bdd, 2, i);
-//    }
-
-//    for (int i = 0; i < 256; ++i) {
-//        test_for_x(bdd, 3, i);
-//    }
-
     clock_t start, end;
     double cpu_time_used;
 
-    start = clock();    //zapne casovac
+    double sucet = 0;
 
-    for(int j = 2; j < 14; j++){    //postupne vytvori strom s 2 - 13 premennymi a skusa pouzit 10 nahodnych vektorov
-        for (int i = 0; i < 10; ++i) {
-            n = pow(2, size_from_count(j));
-            test_for_x(bdd, j, rand() % n);
-        }
+    for (int i = 0; i < 2000; ++i) {
+        start = clock();
+
+        n = pow(2, size_from_count(13));
+        test_for_x_without_printf(bdd, 13, rand() % n);
+
+        end = clock();      //skonci casovac
+        cpu_time_used = ((double) (end - start));
+        sucet += cpu_time_used;
+        //printf("Time: %.2lfms\n\n", cpu_time_used);
     }
-    printf("ok\n");
-
-    end = clock();      //skonci casovac
-    cpu_time_used = ((double) (end - start));
-    printf("Time: %lfms\n", cpu_time_used);
+    printf("Priemer: %.2lfms\n\n", sucet/2000);
+    printf("Celkovy cas: %.2lfms\n\n", sucet);
 
 
     return 0;
